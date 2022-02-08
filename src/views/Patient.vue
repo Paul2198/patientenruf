@@ -109,7 +109,7 @@ export default {
     await this.getData()
     this.createDrawing()
     this.connectToHeadset()
-    this.setGradient()
+    // this.setGradient()
     if (this.krankenhaus){
       this.update();
     }
@@ -362,12 +362,17 @@ export default {
         })
         .attr("stroke", "black")
         .attr("stroke-width", 1)
-        .on("click", function (i, d) {
-          self.clickFeld(d.data);
-        })
-        .on("mouseenter", function(i, d) {
+        .on("mouseover", function(_, d) {
           self.gewaehlteNachricht = d.data.id
-          self.update()
+          d3.select(this).style("fill", "#F9C5D5")
+          // self.update()
+        })
+        .on("mouseleave", function() {
+          d3.select(this).style("fill", "#F2789F")
+        })
+        .on("click", function (i, d) {
+          console.log("haisd")
+          self.clickFeld(d.data);
         })
       /**Texte hineinschreiben */
       this.svg

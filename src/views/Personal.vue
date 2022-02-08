@@ -191,7 +191,7 @@
         <v-card-title>Nachricht/Ordner verändern</v-card-title>
         <v-card-text>
           <v-text-field v-model="nachrichtToChange.name" label="Name"></v-text-field>
-          <v-text-field v-model="nachrichtToChange.icon" label="Icon" :append-outer-icon="nachrichtToChange.icon"></v-text-field>
+          <v-text-field v-model="nachrichtToChange.icon" label="Icon" :append-outer-icon="nachrichtToChange.icon && nachrichtToChange.icon.includes('mdi') ? nachrichtToChange.icon : '$' + nachrichtToChange.icon"></v-text-field>
           <v-text-field v-model="nachrichtToChange.prio" label="Priorität" type="number" v-if="nachrichtToChange.typ == 'Nachricht'"></v-text-field>
         </v-card-text>
         <v-card-actions>
