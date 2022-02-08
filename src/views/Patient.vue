@@ -45,6 +45,9 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-snackbar v-model="snackbar" color="var(--color1)" absolute top left>
+      <p style="color: black">Deine Nachricht wurde geschickt</p>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -83,7 +86,8 @@ export default {
     foundConnection: false,
     /**Setzen wann ein Befehl ausgeführt wird */
     maxNumber: 1000,
-    maxNeutral: 100
+    maxNeutral: 100,
+    snackbar: false
   }),
   /**Wird beim laden der Seite als erstes ausgeführt
    * 
@@ -323,6 +327,10 @@ export default {
       //eslint-disable-next-line
       const docRef = await addDoc(krankenhausRef, e);
       this.backToStart()
+      this.snackbar = true
+      setTimeout(() => {
+        this.snackbar = false
+      }, 3500)
     },
     /**Entscheiden was passiert wenn Feld gedrückt wurde */
     clickFeld(e) {
