@@ -381,6 +381,7 @@ export default {
           self.clickFeld(d.data);
         })
       /**Texte hineinschreiben */
+      let fontsize = window.innerWidth < 650 ? window.innerWidth < 400 ? 10 : 17 : 30
       this.svg
         .selectAll("newText")
         .data(data_ready)
@@ -392,10 +393,11 @@ export default {
           return `translate(${self.arcGen.centroid(d)})`;
         })
         .style("text-anchor", "middle")
-        .style("font-size", 30)
+        .style("font-size", fontsize)
         .attr("pointer-events", "none")
 
       /**Icons abbilden */
+      let iconSize = window.innerWidth < 650 ? window.innerWidth < 400 ? 20 : 32: 70
       let imgs = this.svg.selectAll("image")
         .data(data_ready);
       imgs.enter()
@@ -404,11 +406,11 @@ export default {
           let imagePath = require(`@/assets/${d.data.icon}.png`)
           return imagePath
         })
-        .attr("width", 70)
-        .attr("height", 70)
+        .attr("width", iconSize)
+        .attr("height", iconSize)
         .attr("transform", function (d) {
             let pos = self.arcGen.centroid(d)
-            return `translate(${[pos[0] - 35, pos[1] + 25]})`;
+            return `translate(${[pos[0] - iconSize/2, pos[1] + iconSize/3]})`;
         })
         .attr("pointer-events", "none")
     },
