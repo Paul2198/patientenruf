@@ -380,14 +380,12 @@ export default {
     async getKrankenhauser(){
       let nachrichtenRef = doc(db, "Krankenhaeuser", "Krankenhaeuser")
       let d = await getDoc(nachrichtenRef)
-      console.log(d.data().Krankenhaeuser)
       this.krankenhausAuswahl = d.data().Krankenhaeuser
     },
     /**Holt Nachrichtenvorlagen vom Server */
     async getNachrichten(){
       let nachrichtenRef = doc(db, this.krankenhaus, "Nachrichten")
       let data = await getDoc(nachrichtenRef)
-      console.log(data.data())
       if (data.data().Nachrichten){
         this.moeglicheNachrichten = data.data().Nachrichten
       }
@@ -444,7 +442,6 @@ export default {
     async pushChangedMessages(){
       let nachrichtenRef = doc(db, this.krankenhaus, "Nachrichten")
       await setDoc(nachrichtenRef, {Nachrichten: this.moeglicheNachrichten})
-      console.log("Geschafft")
       this.nachrichtenVeraendernDialog = false
     },
     /**Öffnet Dialog zum verändern einer Nachricht
@@ -540,11 +537,9 @@ export default {
     reformatToTreeview(ob, parent){
       let items = []
       let localId = 0
-      // console.log("Start", ob)
       Object.entries(ob).forEach(elem => {
         localId = elem[0]
         elem = elem[1]
-        // console.log("Hier", elem)
         if (elem.Typ == "Ordner"){
           let temp = {
             icon: elem.icon,
