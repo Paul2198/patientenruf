@@ -1,67 +1,74 @@
 <template>
   <v-container>
-    <v-btn absolute top right fab @click="nachrichtenVeraendernDialog = true" class="mt-10"><v-icon>mdi-cog</v-icon></v-btn>
-    <!-- <v-btn @click="pushSomething()">asd</v-btn> -->
+    <v-menu>
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn absolute top right fab v-bind="attrs" v-on="on" class="mt-10">
+          <v-icon>mdi-cog</v-icon>
+        </v-btn>
+          <!-- <v-icon
+            v-bind="attrs"
+            v-on="on"
+            x-large
+            absolute top right fab
+          >mdi-cog
+          </v-icon> -->
+        </template>
+        <v-list>
+          <v-list-item
+            @click="auswahlDialog = true"
+          >
+            <v-list-item-title>Krankenhaus ändern</v-list-item-title>
+          </v-list-item>
+          <v-list-item
+            @click="nachrichtenVeraendernDialog = true"
+          >
+            <v-list-item-title>Nachrichten Ändern</v-list-item-title>
+          </v-list-item>
+        </v-list>
+    </v-menu>
+    <!-- <v-btn absolute top right fab @click="nachrichtenVeraendernDialog = true" class="mt-10"><v-icon>mdi-cog</v-icon></v-btn> -->
+    <!-- <v-btn @click="laterDelete()">asd</v-btn> -->
     <v-card  class="ma-3">
       <v-card-title class="">Offene Nachrichten</v-card-title>
       <v-card-text>
-        <v-row>
-          <v-col v-for="(item, index) in nachrichtenOffenSorted" :key="index">
+        <v-row >
+          <v-col v-for="(item, index) in nachrichtenOffenSorted" :key="index" :cols="Math.floor(nachrichtenPrios.length / 12)">
             <h3>Priorität {{index}}</h3>
             <v-row no-gutters>
               <v-col cols="12" v-for="(nachricht, key) in item" :key="key">
-                <v-chip  class="ma-2" outlined>
-                  <v-icon left>mdi-account-outline</v-icon>
-                  {{ nachricht.Name }} - {{nachricht.Raum}}
-                  <v-icon right @click="changeToLaeuft(nachricht.id)">mdi-check</v-icon>
+                <v-chip  class="ma-2" large color="var(--color3)">
+                  {{nachricht.Raum + "  | "}} 
+                  <v-icon>{{"$" + nachricht.icon}}</v-icon>
+                  {{" " + nachricht.Name }}
+                  <v-icon right @click="changeToLaeuft(nachricht.id)" color="var(--color1)" large>mdi-check-circle-outline</v-icon>
                 </v-chip>
               </v-col>
             </v-row>
             
           </v-col>
         </v-row>
-        <!-- <v-chip
-          v-for="(nachricht, index) in nachrichtenOffen"
-          :key="index"
-          class="ma-2"
-          color="deep-purple accent-4"
-          outlined
-        >
-          <v-icon left>mdi-account-outline</v-icon>
-          {{ nachricht.Name }}
-          <v-icon right @click="changeToLaeuft(nachricht.id)">mdi-check</v-icon>
-        </v-chip> -->
       </v-card-text>
     </v-card>
     <v-card class="ma-3">
       <v-card-title>Laufende Nachrichten</v-card-title>
       <v-card-text>
         <v-row>
-          <v-col v-for="(item, index) in nachrichtenLaeuftSorted" :key="index">
+          <v-col v-for="(item, index) in nachrichtenLaeuftSorted" :key="index" :cols="Math.floor(nachrichtenPrios.length / 12)">
             <h3>Priorität {{index}}</h3>
             <v-row no-gutters>
               <v-col cols="12" v-for="(nachricht, key) in item" :key="key">
-                <v-chip  class="ma-2" outlined>
-                  <v-icon left>mdi-account-outline</v-icon>
-                  {{ nachricht.Name }} - {{nachricht.Raum}}
-                  <v-icon right @click="changeToAbgeschlossen(nachricht.id)">mdi-check</v-icon>
+                <v-chip  class="ma-2" large color="var(--color3)">
+                  <!-- <v-icon left>mdi-account-outline</v-icon> -->
+                  {{nachricht.Raum + "  | "}}
+                  <v-icon>{{"$" + nachricht.icon}}</v-icon>
+                  {{ nachricht.Name }}
+                  <v-icon right @click="changeToAbgeschlossen(nachricht.id)" color="black" large>mdi-check-circle-outline</v-icon>
                 </v-chip>
               </v-col>
             </v-row>
             
           </v-col>
         </v-row>
-        <!-- <v-chip
-          v-for="(nachricht, index) in nachrichtenLaeuft"
-          :key="index"
-          class="ma-2"
-          color="primary"
-          outlined
-        >
-          <v-icon left>mdi-account-outline</v-icon>
-          {{ nachricht.Name }}
-          <v-icon right @click="changeToAbgeschlossen(nachricht.id)">mdi-check</v-icon>
-        </v-chip> -->
       </v-card-text>
     </v-card>
     <v-card  class="ma-3">
@@ -71,7 +78,23 @@
         <v-icon>{{!showAbgeschlossen ? "mdi-plus" : "mdi-minus"}}</v-icon>
         </v-card-title>
       <v-card-text v-if="showAbgeschlossen">
-        <v-chip
+        <v-row>
+          <v-col v-for="(item, index) in nachrichtenAbgeschlossenSorted" :key="index" :cols="Math.floor(nachrichtenPrios.length / 12)">
+            <h3>Priorität {{index}}</h3>
+            <v-row no-gutters>
+              <v-col cols="12" v-for="(nachricht, key) in item" :key="key">
+                <v-chip  class="ma-2" color="var(--color1)">
+                  <!-- <v-icon left>mdi-account-outline</v-icon> -->
+                  <v-icon>{{"$" + nachricht.icon}}</v-icon>
+                  {{ nachricht.Name }} - {{nachricht.Raum}}
+                  <v-icon right @click="changeToAbgeschlossen(nachricht.id)" color="green">mdi-check-circle-outline</v-icon>
+                </v-chip>
+              </v-col>
+            </v-row>
+            
+          </v-col>
+        </v-row>
+        <!-- <v-chip
           v-for="(nachricht, index) in nachrichtenAbgeschlossen"
           :key="index"
           class="ma-2"
@@ -80,8 +103,7 @@
         >
           <v-icon left>mdi-account-outline</v-icon>
           {{ nachricht.Name }}
-          <!-- <v-icon right @click="changeToAbgeschlossen(nachricht.id)">mdi-check</v-icon> -->
-        </v-chip>
+        </v-chip> -->
       </v-card-text>
     </v-card>
     <v-dialog id="KrankenhausAbfragen" v-model="auswahlDialog" persistent max-width="400">
@@ -101,23 +123,23 @@
         <v-card-title>Ändere Nachrichten
           <v-spacer></v-spacer>
           <v-menu>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon
-                    v-bind="attrs"
-                    v-on="on"
-                  >mdi-plus
-                  </v-icon>
-                </template>
-                <v-list>
-                  <v-list-item
-                    v-for="(i, index) in ['Ordner', 'Nachricht']"
-                    :key="index"
-                    @click="addNachrichtFolder(undefined, i)"
-                  >
-                    <v-list-item-title>{{ i }}</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                v-bind="attrs"
+                v-on="on"
+              >mdi-plus
+              </v-icon>
+            </template>
+            <v-list>
+              <v-list-item
+                v-for="(i, index) in ['Ordner', 'Nachricht']"
+                :key="index"
+                @click="addNachrichtFolder(undefined, i)"
+              >
+                <v-list-item-title>{{ i }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </v-card-title>
         <v-card-text>
           <!-- <p v-for="(value, key) in moeglicheNachrichten" :key="key">
@@ -128,7 +150,7 @@
           <v-treeview :items="moeglicheNachrichtenForTreeview">
             <template v-slot:prepend="{ item }">
               <v-icon>
-                {{ item.icon }}
+                {{ item.icon.includes("mdi") ? item.icon : '$' + item.icon}}
               </v-icon>
             </template>
             <template v-slot:append="{item}">
@@ -291,6 +313,21 @@ export default {
       })
       return ergebnis
     },
+    nachrichtenAbgeschlossenSorted(){
+      let ergebnis = {}
+      this.nachrichtenPrios.forEach(prio => {
+        ergebnis[prio] = []
+      })
+      this.nachrichtenAbgeschlossen.forEach(element => {
+          ergebnis[element.Priorität].push(element)
+      });
+      Object.values(ergebnis).forEach(arr => {
+        arr.sort((a,b) => {
+          return a.Time - b.Time
+        })
+      })
+      return ergebnis
+    },
     moeglicheNachrichtenForTreeview:{
       get(){
         this.globalId = 0
@@ -307,7 +344,7 @@ export default {
       "Nachrichten"
     );
     this.alleNachrichtenRef = cNachrichten;
-    const q = query(cNachrichten, where("Status", "!=", "Abgeschlossen"));
+    // const q = query(cNachrichten, where("Status", "!=", "Abgeschlossen"));
     this.unsub = onSnapshot(cNachrichten, (queryNachricht) => {
       this.nachrichten = [];
       queryNachricht.forEach((nachricht) => {
@@ -333,9 +370,30 @@ export default {
       }
 
     },
+    newSubOnNachrichten(){
+      this.unsub()
+      let cNachrichten = collection(
+          db,
+          this.krankenhaus,
+          "Nachrichten",
+          "Nachrichten"
+        );
+        this.alleNachrichtenRef = cNachrichten;
+        // const q = query(cNachrichten, where("Status", "!=", "Abgeschlossen"));
+        this.unsub = onSnapshot(cNachrichten, (queryNachricht) => {
+          this.nachrichten = [];
+          queryNachricht.forEach((nachricht) => {
+            let temp = nachricht.data();
+            temp.id = nachricht.id;
+            this.nachrichten.push(temp);
+          });
+        });
+    },
     changeKrankenhausAuswahl(){
       this.auswahlDialog = false
       localStorage.setItem("krankenhaus", this.krankenhaus)
+      this.getNachrichten()
+      this.newSubOnNachrichten()
     },
     async changeToLaeuft(index) {
       let nRef = doc(this.alleNachrichtenRef, index);
@@ -504,7 +562,12 @@ export default {
       let temp = JSON.parse(JSON.stringify(this.moeglicheNachrichten))
       this.moeglicheNachrichten = temp
       
-    }
+    },
+    // async laterDelete(){
+    //   let nachrichtenRef = doc(db, "Krankenhaus1", "Nachrichten")
+    //   await setDoc(nachrichtenRef, {Nachrichten: this.moeglicheNachrichten})
+    //   console.log("Geschafft")
+    // }
   },
 };
 </script>

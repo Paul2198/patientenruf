@@ -432,6 +432,7 @@ export default {
 
       this.svg.selectAll("path").remove();
       this.svg.selectAll("text").remove();
+      this.svg.selectAll("image").remove()
       this.svg
         .selectAll("path")
         .data(data_ready)
@@ -441,11 +442,11 @@ export default {
         .attr("fill", function (d) {
           // console.log(d.data);
           if (self.gewaehlteNachricht == d.data.id && self.foundConnection) {
-            return "blue";
+            return "#F9C5D5";
           }
-          return "grey";
+          return "#F2789F";
         })
-        .attr("stroke", "white")
+        .attr("stroke", "black")
         .attr("stroke-width", 1)
         .on("click", function (i, d) {
           self.clickFeld(d.data);
@@ -462,16 +463,47 @@ export default {
           return `translate(${self.arcGen.centroid(d)})`;
         })
         .style("text-anchor", "middle")
-        .style("font-size", 17);
+        .style("font-size", 30);
+
+      let imgs = this.svg.selectAll("image")
+        .data(data_ready);
+      imgs.enter()
+        .append("svg:image")
+        .attr("xlink:href", function (d) {
+          let imagePath = require(`@/assets/${d.data.icon}.png`)
+          // console.log(imagePath)
+          return imagePath
+        })
+        .attr("width", 70)
+        .attr("height", 70)
+        .attr("transform", function (d) {
+            let pos = self.arcGen.centroid(d)
+            return `translate(${[pos[0] - 35, pos[1] + 25]})`;
+        })
     },
   },
 };
 </script>
 
 <style>
+@import url("https://fonts.googleapis.com/css2?family=Strait&display=swap");
+* {
+  font-family: "Strait", sans-serif;
+  font-size: 20px;
+}
+.button {
+  background-color: white;
+}
+#nav {
+  background-color: #f2789f;
+}
+#app {
+  background-color: #fee3ec;
+}
 :root {
     --color1:#ffc0cb;
     --color2:#00ffff;
+    --color3:#F2789F;
 }
 .stop-left {
   stop-color: #ffc0cb;
