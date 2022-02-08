@@ -85,8 +85,9 @@
               <v-col cols="12" v-for="(nachricht, key) in item" :key="key">
                 <v-chip  class="ma-2" color="var(--color3)">
                   <!-- <v-icon left>mdi-account-outline</v-icon> -->
+                  {{nachricht.Raum + "  | "}} 
                   <v-icon>{{"$" + nachricht.icon}}</v-icon>
-                  {{ nachricht.Name }} - {{nachricht.Raum}}
+                  {{" "+ nachricht.Name }}
                   <v-icon right @click="changeToAbgeschlossen(nachricht.id)" color="green">mdi-check-circle-outline</v-icon>
                 </v-chip>
               </v-col>

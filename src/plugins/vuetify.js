@@ -9,6 +9,7 @@ import beduerfnisse from "../icons/beduerfnisse"
 import sonstiges from "../icons/sonstiges"
 import notfall from "../icons/notfall"
 import schmerzmittel from "../icons/schmerzmittel"
+import notfall_2 from "../icons/notfall_2"
 
 Vue.use(Vuetify);
 
@@ -56,6 +57,9 @@ export default new Vuetify({
       },
       schmerzmittel: {
         component: schmerzmittel
+      },
+      notfall_2: {
+        component: notfall_2
       }
     }
   }
