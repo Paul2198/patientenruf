@@ -362,7 +362,6 @@ export default {
         .append("path")
         .attr("d", self.arcGen)
         .attr("fill", function (d) {
-          // console.log(d.data);
           if (self.gewaehlteNachricht == d.data.id && self.foundConnection) {
             return "#F9C5D5";
           }
@@ -379,7 +378,6 @@ export default {
           d3.select(this).style("fill", "#F2789F")
         })
         .on("click", function (i, d) {
-          console.log("haisd")
           self.clickFeld(d.data);
         })
       /**Texte hineinschreiben */
