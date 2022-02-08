@@ -1,26 +1,22 @@
 <template>
   <v-container>
-    <!-- <button @click="pushSomething()">Push</button>
-    <button @click="backToStart()">Back to Start</button>
-    <button @click="naechsteAuswahl()">Nächste Nachricht</button>
-    <button @click="auswaehlen()">Auswählen</button> -->
-    {{zusammenrechnen}}
+    <!-- {{zusammenrechnen}} -->
     <div id="svg-data"></div>
     <v-btn absolute top right fab @click="auswahlDialog = true" class="mt-10"><v-icon>mdi-cog</v-icon></v-btn>
-    <v-btn id="backToStartButton" class="gradient0" @click="backToStart()"
-      >Zurück zur Startansicht</v-btn
-    >
-    <div id="FoundEmotiv" v-show="foundConnection">
-      <v-btn
-        id="naechsteAuswahlButton"
-        class="gradient0"
-        @click="naechsteAuswahl()"
-        >Nächste Auswahl</v-btn
-      >
-      <v-btn id="auswaehlenButton" class="gradient0" @click="auswaehlen()"
-        >Auswählen</v-btn
-      >
-    </div>
+    <v-row>
+      <v-col :cols="foundConnection ? '4' : '12'">
+        <v-btn id="backToStartButton" class="gradient0" @click="backToStart()">Zurück zur Startansicht</v-btn><br>
+        Push
+      </v-col>
+      <v-col v-if="foundConnection" cols="4">
+        <v-btn id="naechsteAuswahlButton" class="gradient0" @click="naechsteAuswahl()">Nächste Auswahl</v-btn><br>
+        Right
+      </v-col>
+      <v-col v-if="foundConnection" cols="4">
+        <v-btn id="auswaehlenButton" class="gradient0" @click="auswaehlen()">Auswählen</v-btn><br>
+        Left
+      </v-col>
+    </v-row>
 
     <v-dialog
       id="KrankenhausRaumAbfragen"
@@ -53,11 +49,20 @@
 </template>
 
 <script>
-/*eslint-disable*/
-import * as d3 from "d3";
+/**Script for Patient
+ * verwendet d3 zum darstellen des Auswahlkreises
+ * verwendet Firestore als Datenbank
+ * 
+ * @author Paul Gelhaar, Maxim Mukhahidev
+ * @since 17.10.2021
+ * @lastUpdated 08.02.2022
+ */
 
+/**Import D3 zum zeichen des Auswahlkreises */
+import * as d3 from "d3";
+/**Datenbank zum verwalten der Nachrichten und der Nachrichtenvorlagen */
 import { db } from "../database/firestore";
-import { collection, addDoc, getDoc, doc, setDoc, getCollection } from "firebase/firestore";
+import { collection, addDoc, getDoc, doc } from "firebase/firestore";
 export default {
   data: () => ({
     krankenhausAuswahl: [],
@@ -66,80 +71,6 @@ export default {
     auswahlDialog: false,
     data: [],
     ebene: "Vorlagen",
-    PushVorlagen: {
-      Nachrichten: {
-        0: {
-          Typ: "Nachricht",
-          Name: "Notfall",
-          Priorität: 1,
-          Status: "Offen",
-          Groesse: 180,
-          id: 0,
-        },
-        1: {
-          Typ: "Ordner",
-          Name: "Sonstiges",
-          id: 1,
-          Nachrichten: {
-            0: {
-              Typ: "Nachricht",
-              Name: "Fenster ist zu 0",
-              Priorität: 10,
-              Status: "Offen",
-              id: 0,
-            },
-            1: {
-              Typ: "Nachricht",
-              Name: "Fenster ist zu 1",
-              Priorität: 10,
-              Status: "Offen",
-              id: 1,
-            },
-            2: {
-              Typ: "Nachricht",
-              Name: "Fenster ist zu 2",
-              Priorität: 10,
-              Status: "Offen",
-              id: 2,
-            },
-            3: {
-              Typ: "Nachricht",
-              Name: "Fenster ist zu 3",
-              Priorität: 10,
-              Status: "Offen",
-              id: 3,
-            },
-            4: {
-              Typ: "Nachricht",
-              Name: "Fenster ist zu  4",
-              Priorität: 10,
-              Status: "Offen",
-              id: 4,
-            },
-            5: {
-              Typ: "Nachricht",
-              Name: "Fenster ist zu 5",
-              Priorität: 10,
-              Status: "Offen",
-              id: 5,
-            },
-            6: {
-              Typ: "Nachricht",
-              Name: "Fenster ist zu 6",
-              Priorität: 10,
-              Status: "Offen",
-              id: 6,
-            },
-          },
-        },
-        2: {
-          Typ: "Ordner",
-          Name: "Bedürfnisse",
-          Nachrichten: {},
-          id: 2,
-        },
-      },
-    },
     zusammenrechnen: {
       left: 0,
       right: 0,
@@ -148,16 +79,16 @@ export default {
     },
     Vorlagen: {},
     gewaehlteNachricht: 0,
-    emotivData: {
-      right: 0,
-      left: 0,
-      push: 0
-    },
     wait: false,
     foundConnection: false,
+    /**Setzen wann ein Befehl ausgeführt wird */
     maxNumber: 1000,
     maxNeutral: 100
   }),
+  /**Wird beim laden der Seite als erstes ausgeführt
+   * 
+   * Schaut ob ein Krankenhaus ausgewählt ist
+   */
   async created() {
     this.getKrankenhauser()
     let raum = localStorage.getItem("raum");
@@ -170,39 +101,39 @@ export default {
     }
     
   },
+  /**Wird beim laden der Seite als zweites ausgeführt
+   * 
+   * initialisiert alle Sachen, bzw. führt sie aus
+   */
   async mounted() {
-    // let ergebnis = ""
-    // for (let i = 0; i < 101; i+=5){
-    //   let temp = ".gradient" + i + "{\n\tbackground: "
-    //   temp += "linear-gradient(90deg, #FFC0CB " + i +"%, #00FFFF " + (i + 5) + "%)"
-    //   temp += "\n}\n"
-    //   ergebnis += temp
-    // }
-    // console.log(ergebnis)
     await this.getData()
-    // this.getGradients()
     this.createDrawing()
     this.connectToHeadset()
     this.setGradient()
     if (this.krankenhaus){
       this.update();
     }
-    
-    // // set the color scale
-    // const color = d3.scaleOrdinal()
-    //   .domain(["a", "b", "c", "d", "e", "f"])
-    //   .range(d3.schemeDark2);
   },
+  /** Wird beim verlassen der Seite ausgeführt
+   * 
+   * Schließt die Websocket-Verbindung
+   * sollte im Normalbetrieb keine Rolle spielen
+   */
   beforeDestroy(){
-    console.log("beforeDestroy")
     this.connection.close()
   },
+  /**Überprüfen, ob eine Variable sich verändert */
   watch: {
+    /**Schaut ob sich die Ebene ändert
+     * -> wenn ein Ordner angeklickt wird
+     */
     ebene: function () {
       this.update();
     },
   },
+  /**Variable, welche automatisch generiert wird, wenn die zu grundeliegenden Daten sich ändern */
   computed: {
+    /**Umformatierung in Array */
     nachrichtenArray() {
       let data_ready = [];
       Object.keys(this.nachrichten).forEach((element) => {
@@ -210,103 +141,87 @@ export default {
       });
       return data_ready;
     },
+    /**Passenden Nachrichten aufgrund der der gewählten Ebene
+     * 
+     * Ebene ist grundsätzlich ein Pfad zu den Nachrichten
+     */
     nachrichten() {
       let data = this;
-      // console.log(this.ebene.split("-"));
       this.ebene.split("-").forEach((element) => {
         data = data[element].Nachrichten;
       });
       return data;
     },
   },
+  /**Ordner für klassische Funktionen */
   methods: {
-    getGradients(){
-      let style = document.createElement('style');
-      style.type = 'text/css';
-      let result = ""
-      for (let i = 0; i < 101; i++) {
-        result += ".gradient"+ i +"{background: linear-gradient(90deg, #ffc0cb " + (i-5) + "%, #00ffff "+ i +"%);}\n"
-      }
-      console.log(result)
-      style.innerHTML = result
-    },
+    /**Verbindung zum Headset herstellen */
     connectToHeadset(){
       this.connection = new WebSocket("ws://localhost:1880/EmotivData", "ws");
 
-    this.connection.onopen = (event) => {
-      // console.log(event);
-      this.foundConnection = true;
-      this.update()
-    };
-
-    this.connection.onmessage = (event) => {
-      if (!this.wait) {
-        let eventData = JSON.parse(event.data);
-        let temp = {left: 0, right: 0, push: 0, neutral: 0}
-        if (eventData.command == "push") {
-          this.zusammenrechnen.push += eventData.value
-          this.setGradient()
-          
-          if (this.zusammenrechnen.push >= this.maxNumber) {
-            this.zusammenrechnen = temp
-            this.backToStart();
-            // this.setWaitTimer();
-          }
-        } else if (eventData.command == "right") {
-          this.zusammenrechnen.right += eventData.value
-          this.setGradient()
-          if (this.zusammenrechnen.right >= this.maxNumber) {
-            this.zusammenrechnen = temp
-            this.naechsteAuswahl();
-            // this.setWaitTimer();
-          }
-        } else if (eventData.command == "left") {
-          this.zusammenrechnen.left += eventData.value
-          this.setGradient()
-          if (this.zusammenrechnen.left >= this.maxNumber) {
-            this.zusammenrechnen = temp
-            this.auswaehlen();
-            // this.setWaitTimer();
-          }
-        } else {
-          this.zusammenrechnen.neutral += 1
-          this.setGradient()
-          if (this.zusammenrechnen.neutral >= this.maxNeutral) {
-            this.zusammenrechnen = temp
-          }
-          // console.log(eventData)
-        }
-      }
-    };
-    },
-    setGradient(){
-      // d3.selectAll(".linearGradient").remove()
-      // let liste = ["left", "right", "push"]
-      // liste.forEach(elem => {
-      //   let linearGradient = this.svgDefs.append("linearGradient").attr("id", elem + "-gradient").attr("class", "linearGradient")
-      //   let temp = Math.floor(this.zusammenrechnen[elem]/(this.maxNumber /100))
-      //   linearGradient.append('stop')
-      //     .attr('class', 'stop-left')
-      //     .attr('offset', temp + '%');
-      //   linearGradient.append('stop')
-      //     .attr('class', 'stop-right')
-      //     .attr('offset', temp + 5 + "%");
-      //   })
-      let map = {
-        backToStartButton: "push", naechsteAuswahlButton: "right",auswaehlenButton: "left"
+      // Verbindung öffnen
+      this.connection.onopen = () => {
+        this.foundConnection = true;
+        this.update()
       };
-      ["backToStartButton", "naechsteAuswahlButton","auswaehlenButton"].forEach(typ => {
+      //Listner auf eine neue Nachricht
+      this.connection.onmessage = (event) => {
+        if (!this.wait) {
+          let eventData = JSON.parse(event.data);
+          let defaultData = {left: 0, right: 0, push: 0, neutral: 0}
+          // Verzweigung in die einzelnen Fälle
+          if (eventData.command == "push") {
+            this.zusammenrechnen.push += eventData.value
+            
+            if (this.zusammenrechnen.push >= this.maxNumber) {
+              this.zusammenrechnen = defaultData
+              this.backToStart();
+            }
+          } else if (eventData.command == "right") {
+            this.zusammenrechnen.right += eventData.value
+            if (this.zusammenrechnen.right >= this.maxNumber) {
+              this.zusammenrechnen = defaultData
+              this.naechsteAuswahl();
+            }
+          } else if (eventData.command == "left") {
+            this.zusammenrechnen.left += eventData.value
+            if (this.zusammenrechnen.left >= this.maxNumber) {
+              this.zusammenrechnen = defaultData
+              this.auswaehlen();
+            }
+          } else {
+            this.zusammenrechnen.neutral += 1
+            if (this.zusammenrechnen.neutral >= this.maxNeutral) {
+              this.zusammenrechnen = defaultData
+            }
+          }
+          // Fortschritt zeichnen
+          this.setGradient()
+        }
+      };
+    },
+    /**Den Verlauf von den Button setzen um den Fortschritt beim denken zu zeigen */
+    setGradient(){
+      let buttonZuBefehl = {
+        backToStartButton: "push", naechsteAuswahlButton: "right", auswaehlenButton: "left"
+      };
+      // Für jeden der 3 Buttons Gradient als class setzen
+      Object.keys(buttonZuBefehl).forEach(typ => {
         let listeClasses = document.getElementById(typ).classList;
+        // Alten Gradient entfernen
         listeClasses.forEach((element) => {
           if (element.includes("gradient")) {
             document.getElementById(typ).classList.remove(element);
           }
         });
-        document.getElementById(typ).classList.add("gradient" + Math.floor(this.zusammenrechnen[map[typ]]/(this.maxNumber /100)));
+        // Neuen Gradient hinzufügen
+        document.getElementById(typ).classList.add("gradient" + Math.floor(this.zusammenrechnen[buttonZuBefehl[typ]]/(this.maxNumber /100)));
         })
       
     },
+    /**Erzeugen der Malumgebung für den Auswahlkreis */
     createDrawing(){
+      // Startwerte ermitlen
       const margin = 100;
       let width = window.innerWidth;
       let height = window.innerHeight - margin;
@@ -315,22 +230,17 @@ export default {
 
       this.arcGen = d3.arc().innerRadius(0).outerRadius(radius);
 
-      // append the svg object to the div called 'my_dataviz'
+      // Svg Element mit eine Gruppe erzeugen und speichern
       this.svg = d3
         .select("#svg-data")
         .append("svg")
         .attr("width", sizeQuadrat)
         .attr("height", sizeQuadrat)
         .attr("id", "svg")
-        
-      this.svgDefs = this.svg.append("defs")
-      this.svg = this.svg.append("g")
+        .append("g")
         .attr("transform", `translate(${sizeQuadrat / 2}, ${sizeQuadrat / 2})`);
-      // let data = [
-      //   { name: "Notfall", wert: 180 },
-      //   { name: "Sonst", wert: 90 },
-      //   { name: "asf", wert: 90 },
-      // ]
+     
+      // Pie erzeugen für das erstellen des Auswahlkreises (intern ein Pie-Chart)
       this.pie = d3
         .pie()
         .startAngle(-0.5 * Math.PI)
@@ -343,37 +253,45 @@ export default {
           }
         });
     },
+    /**Ändern des ausgewählten Krankenhauses */
     async changeKrankenhausRaumAuswahl() {
       this.auswahlDialog = false;
+      // Speichern im LocalStorage des Browsers um nicht immer neu danach Fragen zu müssen
       localStorage.setItem("krankenhaus", this.krankenhaus);
       localStorage.setItem("raum", this.raumNummer);
+      // Nachrichten laden
       await this.getData()
       this.update()
     },
+    /**Holen der Nachrichten von der Datenbank */
     async getData() {
       if (this.krankenhaus) {
         let nachrichtenRef = doc(db, this.krankenhaus, "Nachrichten");
         let d = await getDoc(nachrichtenRef);
-        // console.log(d.data().Nachrichten);
+        // In den Vorlagen speichern
         this.Vorlagen.Nachrichten = d.data().Nachrichten;
       }
     },
+    /**Mögliche Krankenhäuser vom Server holen */
     async getKrankenhauser(){
       let nachrichtenRef = doc(db, "Krankenhaeuser", "Krankenhaeuser")
       let d = await getDoc(nachrichtenRef)
-      // console.log(d.data().Krankenhaeuser)
       this.krankenhausAuswahl = d.data().Krankenhaeuser
     },
+    /**Nicht mehr relevant */
     setWaitTimer() {
       this.wait = true;
       setTimeout(() => {
         this.wait = false;
       }, 1000);
     },
+    /**Wenn der Button auswählen geclickt wird, clickFeld ausführen */
     auswaehlen() {
       this.clickFeld(this.nachrichten[this.gewaehlteNachricht]);
     },
+    /**Auswahl wird um aufs nächste gesetzt */
     naechsteAuswahl() {
+      // Überprüfen ob es das letzte war
       if (this.gewaehlteNachricht == this.nachrichtenArray.length - 1) {
         this.gewaehlteNachricht = 0;
       } else {
@@ -381,11 +299,16 @@ export default {
       }
       this.update();
     },
+    /**Zurück auf höchste Ebene gehen */
     backToStart() {
       this.ebene = "Vorlagen";
       this.gewaehlteNachricht = 0;
       this.update();
     },
+    /**Nachricht abschicken
+     * Nachricht wird um Daten ergänzt und auf den Server gespeichert
+     * @todo Anzeigen, dass Nachricht geschickt wurde
+     */
     async schickeNachricht(e) {
       e.Raum = this.raumNummer;
       e.Time = Date.now()
@@ -397,42 +320,33 @@ export default {
         "Nachrichten",
         "Nachrichten"
       );
+      //eslint-disable-next-line
       const docRef = await addDoc(krankenhausRef, e);
       this.backToStart()
-      // console.log("Nachricht Geschickt", e, docRef.id);
-      // TODO Nachricht abbonieren für Status
     },
+    /**Entscheiden was passiert wenn Feld gedrückt wurde */
     clickFeld(e) {
+      // Order öffnen und zur neuen Ansicht springen
       if (e.Typ == "Ordner") {
         this.ebene = this.ebene + "-" + e.id;
         this.gewaehlteNachricht = 0;
         this.update();
+      // Nachricht abschicken
       } else {
         this.schickeNachricht(e);
-        console.log("Schicke Nachricht", e.Name);
       }
     },
-    getNachrichten() {
-      let data = this;
-      // console.log(this.ebene.split("-"));
-      this.ebene.split("-").forEach((element) => {
-        data = data[element].Nachrichten;
-      });
-      // console.log(data);
-      let data_ready = [];
-      Object.keys(data).forEach((element) => {
-        data_ready.push(data[element]);
-      });
-      // console.log(data_ready);
-      return data_ready;
-    },
+    /**Zeichnen des Auswahlkreises */
     update() {
       let data_ready = this.pie(this.nachrichtenArray);
       let self = this;
 
+      /**Entfernen aller alten Elemente */
       this.svg.selectAll("path").remove();
       this.svg.selectAll("text").remove();
       this.svg.selectAll("image").remove()
+
+      /**Auswahlfelder malen */
       this.svg
         .selectAll("path")
         .data(data_ready)
@@ -450,8 +364,12 @@ export default {
         .attr("stroke-width", 1)
         .on("click", function (i, d) {
           self.clickFeld(d.data);
-        });
-
+        })
+        .on("mouseenter", function(i, d) {
+          self.gewaehlteNachricht = d.data.id
+          self.update()
+        })
+      /**Texte hineinschreiben */
       this.svg
         .selectAll("newText")
         .data(data_ready)
@@ -463,15 +381,16 @@ export default {
           return `translate(${self.arcGen.centroid(d)})`;
         })
         .style("text-anchor", "middle")
-        .style("font-size", 30);
+        .style("font-size", 30)
+        .attr("pointer-events", "none")
 
+      /**Icons abbilden */
       let imgs = this.svg.selectAll("image")
         .data(data_ready);
       imgs.enter()
         .append("svg:image")
         .attr("xlink:href", function (d) {
           let imagePath = require(`@/assets/${d.data.icon}.png`)
-          // console.log(imagePath)
           return imagePath
         })
         .attr("width", 70)
@@ -480,6 +399,7 @@ export default {
             let pos = self.arcGen.centroid(d)
             return `translate(${[pos[0] - 35, pos[1] + 25]})`;
         })
+        .attr("pointer-events", "none")
     },
   },
 };

@@ -8,10 +8,7 @@ import trinken from "../icons/trinken"
 import beduerfnisse from "../icons/beduerfnisse"
 import sonstiges from "../icons/sonstiges"
 import notfall from "../icons/notfall"
-// Vue.component("image-icon", {
-//   template: `<v-img :src="imgsrc" max-width="32"></v-img>`,
-//   props: ["imgsrc"]
-// });
+import schmerzmittel from "../icons/schmerzmittel"
 
 Vue.use(Vuetify);
 
@@ -23,6 +20,7 @@ export default new Vuetify({
       }
     }
   },
+  /**Um per Icon darauf zuzugreifen */
   icons: {
     iconfont: "mdi",
     values: {
@@ -55,6 +53,9 @@ export default new Vuetify({
       },
       sonstiges: {
         component: sonstiges,
+      },
+      schmerzmittel: {
+        component: schmerzmittel
       }
     }
   }

@@ -83,7 +83,7 @@
             <h3>Priorität {{index}}</h3>
             <v-row no-gutters>
               <v-col cols="12" v-for="(nachricht, key) in item" :key="key">
-                <v-chip  class="ma-2" color="var(--color1)">
+                <v-chip  class="ma-2" color="var(--color3)">
                   <!-- <v-icon left>mdi-account-outline</v-icon> -->
                   <v-icon>{{"$" + nachricht.icon}}</v-icon>
                   {{ nachricht.Name }} - {{nachricht.Raum}}
@@ -205,17 +205,22 @@
 </template>
 
 <script>
-/*eslint-disable*/
+/**Script for Patient
+ * verwendet Firestore als Datenbank
+ * 
+ * @author Paul Gelhaar, Maxim Mukhahidev
+ * @since 17.10.2021
+ * @lastUpdated 08.02.2022
+ */
+
+/**Import Dabenbank */
 import { db } from "../database/firestore";
 import {
   collection,
-  addDoc,
   getDoc,
   doc,
   setDoc,
   onSnapshot,
-  query,
-  where,
   updateDoc,
 } from "firebase/firestore";
 export default {
@@ -229,8 +234,12 @@ export default {
     moeglicheNachrichten: {},
     openDialogChangeNachricht: false,
     nachrichtToChange: {},
-    globalId: 0
   }),
+  
+  /**Ausführen als erstes beim laden der Seite
+   * Krankenhäuser laden und überprüfen ob eins ausgewählt ist
+   * Nachrichten laden
+   */
   created() {
     this.getKrankenhauser()
     let krankenhausLocalStorage = localStorage.getItem("krankenhaus")
@@ -241,12 +250,16 @@ export default {
     }
     this.getNachrichten()
   },
+  /**Schaut ob Variablen sich verändern */
   watch:{
+    /**Schaut ob die Variable Krankenhaus sich verändert */
     krankenhaus: function(val){
       localStorage.setItem("krankenhaus", val)
     }
   },
+  /**Variable, welche automatisch generiert wird, wenn die zu grundeliegenden Daten sich ändern */
   computed: {
+    /**Ermittelt welche Prioritäten vorhanden sind */
     nachrichtenPrios() {
       let ergebnis = []
       this.nachrichten.forEach(elem => {
@@ -256,6 +269,7 @@ export default {
       })
       return ergebnis
     },
+    /**Filtert alle Nachrichten nach denen, die den Status "Offen" haben */
     nachrichtenOffen() {
       let ergebnis = [];
       this.nachrichten.forEach((elem) => {
@@ -265,6 +279,7 @@ export default {
       });
       return ergebnis;
     },
+    /**Sortiert diese nach Priorität und Zeitstempel */
     nachrichtenOffenSorted(){
       let ergebnis = {}
       this.nachrichtenPrios.forEach(prio => {
@@ -280,6 +295,7 @@ export default {
       })
       return ergebnis
     },
+    /**Filtert alle Nachrichten nach denen, die den Status "Läuft" haben */
     nachrichtenLaeuft() {
       let ergebnis = [];
       this.nachrichten.forEach((elem) => {
@@ -289,6 +305,7 @@ export default {
       });
       return ergebnis;
     },
+    /**Sortiert diese nach Priorität und Zeitstempel */
     nachrichtenLaeuftSorted(){
       let ergebnis = {}
       this.nachrichtenPrios.forEach(prio => {
@@ -304,6 +321,7 @@ export default {
       })
       return ergebnis
     },
+    /**Filtert alle Nachrichten nach denen, die den Status "Abgeschlossen" haben */
     nachrichtenAbgeschlossen(){
       let ergebnis = [];
       this.nachrichten.forEach(elem => {
@@ -313,6 +331,7 @@ export default {
       })
       return ergebnis
     },
+    /**Sortiert diese nach Priorität und Zeitstempel */
     nachrichtenAbgeschlossenSorted(){
       let ergebnis = {}
       this.nachrichtenPrios.forEach(prio => {
@@ -328,14 +347,15 @@ export default {
       })
       return ergebnis
     },
-    moeglicheNachrichtenForTreeview:{
-      get(){
-        this.globalId = 0
+    /** Bringt Nachrichtenvorlagen in richtiges Datenformat */
+    moeglicheNachrichtenForTreeview(){
         return this.reformatToTreeview(this.moeglicheNachrichten, "root")
       }
-    }
-
   },
+  /**Wird beim laden der Seite als zweites ausgeführt
+   * 
+   * Abboniert alle Nachrichten -> wird automatisch informiert, wenn sich etwas ändert
+   */
   mounted() {
     let cNachrichten = collection(
       db,
@@ -344,7 +364,6 @@ export default {
       "Nachrichten"
     );
     this.alleNachrichtenRef = cNachrichten;
-    // const q = query(cNachrichten, where("Status", "!=", "Abgeschlossen"));
     this.unsub = onSnapshot(cNachrichten, (queryNachricht) => {
       this.nachrichten = [];
       queryNachricht.forEach((nachricht) => {
@@ -354,13 +373,16 @@ export default {
       });
     });
   },
+  /**Order für Funktionen */
   methods: {
+    /**Holt mögliche Krankenhäuser vom Server */
     async getKrankenhauser(){
       let nachrichtenRef = doc(db, "Krankenhaeuser", "Krankenhaeuser")
       let d = await getDoc(nachrichtenRef)
       console.log(d.data().Krankenhaeuser)
       this.krankenhausAuswahl = d.data().Krankenhaeuser
     },
+    /**Holt Nachrichtenvorlagen vom Server */
     async getNachrichten(){
       let nachrichtenRef = doc(db, this.krankenhaus, "Nachrichten")
       let data = await getDoc(nachrichtenRef)
@@ -370,6 +392,7 @@ export default {
       }
 
     },
+    /**Verändert das Abo für Nachrichten */
     newSubOnNachrichten(){
       this.unsub()
       let cNachrichten = collection(
@@ -389,38 +412,57 @@ export default {
           });
         });
     },
+    /**Nach Änderung der Krankenhauses.
+     * Neues Abo wird ausgeführt
+     */
     changeKrankenhausAuswahl(){
       this.auswahlDialog = false
       localStorage.setItem("krankenhaus", this.krankenhaus)
       this.getNachrichten()
       this.newSubOnNachrichten()
     },
+    /**Ändert den Status einer Nachricht auf Läuft und speichert diese in der Datenbank
+     * @param index ist eine UID von Firebase
+     */
     async changeToLaeuft(index) {
       let nRef = doc(this.alleNachrichtenRef, index);
       await updateDoc(nRef, {
         Status: "Läuft",
       });
     },
+    /**Ändert den Status einer Nachricht auf Abgeschlossen und speichert diese in der Datenbank
+     * @param index ist eine UID von Firebase
+     */
     async changeToAbgeschlossen(index) {
       let nRef = doc(this.alleNachrichtenRef, index);
       await updateDoc(nRef, {
         Status: "Abgeschlossen",
       });
     },
+    /**Speichert veränderte Nachrichtenvorlagen auf den Server */
     async pushChangedMessages(){
       let nachrichtenRef = doc(db, this.krankenhaus, "Nachrichten")
       await setDoc(nachrichtenRef, {Nachrichten: this.moeglicheNachrichten})
       console.log("Geschafft")
       this.nachrichtenVeraendernDialog = false
     },
+    /**Öffnet Dialog zum verändern einer Nachricht
+     * @param ob ist eine Nachricht als Objekt
+     */
     changeNachricht(ob){
       this.nachrichtToChange = ob
       this.openDialogChangeNachricht = true
     },
+    /**Löscht eine Nachricht
+     * @param nachricht ist eine Nachricht
+     */
     deleteNachricht(nachricht){
       let parentRoute = nachricht.parent.split("-")
+      /**Überprüfen auf welcher Ebene die Nachricht/Ordner liegt */
       if (parentRoute.length == 1){
+        /**Löschen der Nachricht */
         delete this.moeglicheNachrichten[nachricht.localId]
+        /**Neu anordnen der Nachrichten, damit die IDs stimmen */
         let temp = []
         Object.values.forEach(elem => {
           temp.push(elem)
@@ -431,15 +473,15 @@ export default {
           this.moeglicheNachrichten[key] = element
         });
       } else {
+        /**Finden und löschen der richtigen Nachricht */
         let obj = this.moeglicheNachrichten
-        console.log(obj[1].Nachrichten)
         parentRoute.forEach(element => {
           if (element != "root"){
             obj = obj[element]
           }
         });
         delete obj.Nachrichten[nachricht.localId]
-        console.log(obj.Nachrichten)
+        /**Neu anordnen der Nachrichten, damit die IDs stimmen */
         let temp = []
         Object.values(obj.Nachrichten).forEach(elem => {
           temp.push(elem)
@@ -451,34 +493,49 @@ export default {
         })
         
       }
+      /**Neu Speichern, damit das computed Value "moeglicheNachrichtenForTreeview" getriggert wird */
       let temp = JSON.parse(JSON.stringify(this.moeglicheNachrichten))
       this.moeglicheNachrichten = temp
     },
+    /**Veränderte Nachricht speichern */
     saveChangedNachricht(){
       let parentRoute = this.nachrichtToChange.parent.split("-")
-      console.log(parentRoute)
+      /**Je Nachdem wo das Element liegt */
       if (parentRoute.length == 1){
+        /**Ändern der Werte */
         this.moeglicheNachrichten[this.nachrichtToChange.localId].icon = this.nachrichtToChange.icon
         this.moeglicheNachrichten[this.nachrichtToChange.localId].Name = this.nachrichtToChange.name
         this.moeglicheNachrichten[this.nachrichtToChange.localId].Priorität = this.nachrichtToChange.prio
       } else {
+        /**Finden des passenden Elements */
         let obj = this.moeglicheNachrichten
         parentRoute.forEach(element => {
           if (element != "root"){
             obj = obj[element]
           }
         });
+        /**Ändern der Werte */
         obj = obj.Nachrichten[this.nachrichtToChange.localId]
         obj.icon = this.nachrichtToChange.icon
         obj.Name = this.nachrichtToChange.name
         obj.Priorität = this.nachrichtToChange.prio
         
       }
+      /**moegliche Nachrichten neu speichern, um computed Value zu triggern */
       let temp = JSON.parse(JSON.stringify(this.moeglicheNachrichten))
       this.moeglicheNachrichten = temp
       this.openDialogChangeNachricht = false
 
     },
+    /**Formatieren für Treeview Element
+     * Das Treeview Element von Vuetify braucht das folgende Format:
+     *  [{NAME: "", children: [...]}]
+     * Da unbekannte Verschachtelung, rekursiv
+     * @param ob ist ein Object, welcher ein Ordner ist
+     * @param parent ist ein String, welcher den Pfad zu diesem Element angibt
+     * 
+     * @returns Treeview items
+     */
     reformatToTreeview(ob, parent){
       let items = []
       let localId = 0
@@ -512,17 +569,22 @@ export default {
       })
       return items
     },
+    /**Änderungen verwerfen */
     dontSaveChanges(){
       this.nachrichtenVeraendernDialog = false
       this.getNachrichten()
     },
+    /**Hinzufügen eines neuen Orders oder einer neuen Nachricht
+     * @param item ist das Element an den hinzugefügt wird, kann undefined sein
+     * @param typ ist der Typ der neuen Element ("Ordner" oder "Nachricht")
+     */
     addNachrichtFolder(item, typ){
-      console.log(item, typ)
       let parent = "root"
+      /**Wenn item gesetzt ist */
       if (item){
-        console.log("hier")
         parent = parent + "-" + item.localId
         let anzahlNachrichten = Object.values(item.children).length
+        /**Vorlage erzeugen */
         let dummy = {
           Typ: typ,
           id: anzahlNachrichten,
@@ -535,6 +597,7 @@ export default {
           dummy.Nachrichten = {}
           dummy.Name = "DefaultOrdner"
         }
+        /**Vorlage an richtige Stelle speichern */
         let obj = this.moeglicheNachrichten
         let parentRoute = parent.split("-")
         parentRoute.forEach(element => {
@@ -543,7 +606,10 @@ export default {
           }
         });
         obj.Nachrichten[anzahlNachrichten] = dummy
-      } else {
+      }
+      /**Wenn undefined soll auf oberster Ebene ein Element hinzugefügt werden */
+      else {
+        /**Vorlage erzeugen */
         let anzahlNachrichten = Object.values(this.moeglicheNachrichten).length
         let dummy = {
           Typ: typ,
@@ -557,17 +623,14 @@ export default {
           dummy.Nachrichten = {}
           dummy.Name = "DefaultOrdner"
         }
+        /**Vorlage hinzufügen */
         this.moeglicheNachrichten[anzahlNachrichten] = dummy
       }
+      /**Neu speichern um computed Value zu triggern */
       let temp = JSON.parse(JSON.stringify(this.moeglicheNachrichten))
       this.moeglicheNachrichten = temp
       
     },
-    // async laterDelete(){
-    //   let nachrichtenRef = doc(db, "Krankenhaus1", "Nachrichten")
-    //   await setDoc(nachrichtenRef, {Nachrichten: this.moeglicheNachrichten})
-    //   console.log("Geschafft")
-    // }
   },
 };
 </script>

@@ -1,8 +1,8 @@
 <template>
   <v-app>
     <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/personal">About</router-link>
+      <router-link to="/">Patient</router-link> |
+      <router-link to="/personal">Personal</router-link>
     </div>
     <router-view/>
   </v-app>
@@ -25,7 +25,7 @@
     color: #2c3e50;
 
     &.router-link-exact-active {
-      color: #42b983;
+      color: var(--color1);
     }
   }
 }
