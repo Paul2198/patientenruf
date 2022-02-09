@@ -1,0 +1,211 @@
+[
+    {
+        "id": "3cb1ec82a1b38c12",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "6eab7b800c5b13bc",
+        "type": "debug",
+        "z": "3cb1ec82a1b38c12",
+        "name": "Emotiv",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1350,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "47c0d0a38049310f",
+        "type": "EMOTIV",
+        "z": "3cb1ec82a1b38c12",
+        "name": "EMOTIV",
+        "x": 160,
+        "y": 100,
+        "wires": [
+            [
+                "ea00ae9e63614c98"
+            ]
+        ]
+    },
+    {
+        "id": "ea00ae9e63614c98",
+        "type": "Profile-Name",
+        "z": "3cb1ec82a1b38c12",
+        "name": "Profile Name",
+        "profileName": "minProfi",
+        "x": 440,
+        "y": 100,
+        "wires": [
+            [
+                "7f228eef432e36ec",
+                "e1d1b0493f45a809",
+                "21ae406b4278767a",
+                "b66c6b2751fd06d6"
+            ]
+        ]
+    },
+    {
+        "id": "7f228eef432e36ec",
+        "type": "Mental-Command",
+        "z": "3cb1ec82a1b38c12",
+        "name": "Mental Commands",
+        "actionName": "right",
+        "mcSen": "10",
+        "x": 790,
+        "y": 200,
+        "wires": [
+            [
+                "c5fcf80a38bf455d"
+            ]
+        ]
+    },
+    {
+        "id": "e1d1b0493f45a809",
+        "type": "Mental-Command",
+        "z": "3cb1ec82a1b38c12",
+        "name": "Mental Commands",
+        "actionName": "push",
+        "mcSen": 10,
+        "x": 790,
+        "y": 40,
+        "wires": [
+            [
+                "dde3134348560133"
+            ]
+        ]
+    },
+    {
+        "id": "21ae406b4278767a",
+        "type": "Mental-Command",
+        "z": "3cb1ec82a1b38c12",
+        "name": "Mental Commands",
+        "actionName": "left",
+        "mcSen": 10,
+        "x": 790,
+        "y": 100,
+        "wires": [
+            [
+                "44d1976cf3b5145b"
+            ]
+        ]
+    },
+    {
+        "id": "629e25d1f8920e43",
+        "type": "websocket out",
+        "z": "3cb1ec82a1b38c12",
+        "name": "",
+        "server": "b3a41e70f0c57d75",
+        "client": "",
+        "x": 1410,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "dde3134348560133",
+        "type": "function",
+        "z": "3cb1ec82a1b38c12",
+        "name": "",
+        "func": "msg.payload = {\"command\": \"push\", \"value\": msg.payload}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 40,
+        "wires": [
+            [
+                "629e25d1f8920e43",
+                "6eab7b800c5b13bc"
+            ]
+        ]
+    },
+    {
+        "id": "44d1976cf3b5145b",
+        "type": "function",
+        "z": "3cb1ec82a1b38c12",
+        "name": "",
+        "func": "msg.payload = {\"command\": \"left\", \"value\": msg.payload}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 100,
+        "wires": [
+            [
+                "629e25d1f8920e43"
+            ]
+        ]
+    },
+    {
+        "id": "c5fcf80a38bf455d",
+        "type": "function",
+        "z": "3cb1ec82a1b38c12",
+        "name": "",
+        "func": "msg.payload = {\"command\": \"right\", \"value\": msg.payload}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 200,
+        "wires": [
+            [
+                "629e25d1f8920e43"
+            ]
+        ]
+    },
+    {
+        "id": "b66c6b2751fd06d6",
+        "type": "Mental-Command",
+        "z": "3cb1ec82a1b38c12",
+        "name": "Mental Commands",
+        "actionName": "neutral",
+        "mcSen": 10,
+        "x": 800,
+        "y": 280,
+        "wires": [
+            [
+                "eedf2896a0e22853"
+            ]
+        ]
+    },
+    {
+        "id": "eedf2896a0e22853",
+        "type": "function",
+        "z": "3cb1ec82a1b38c12",
+        "name": "",
+        "func": "msg.payload = {\"command\": \"neutral\", \"value\": msg.payload}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 280,
+        "wires": [
+            [
+                "629e25d1f8920e43"
+            ]
+        ]
+    },
+    {
+        "id": "b3a41e70f0c57d75",
+        "type": "websocket-listener",
+        "path": "/EmotivData",
+        "wholemsg": "false"
+    }
+]
