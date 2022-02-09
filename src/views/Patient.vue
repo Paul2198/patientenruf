@@ -103,6 +103,14 @@ export default {
 
       this.auswahlDialog = true;
     }
+    let maxWert1 = localStorage.getItem("maxNumber")
+    let maxWert2 = localStorage.getItem("maxNeutral")
+    if (maxWert1){
+      this.maxNumber = parseInt(maxWert1)
+    }
+    if (maxWert2){
+      this.maxNeutral = parseInt(maxWert2)
+    }
     
   },
   /**Wird beim laden der Seite als zweites ausgeführt
